@@ -10,11 +10,11 @@ import org.zywx.wbpalmstar.engine.universalex.EUExBase;
 import org.zywx.wbpalmstar.engine.universalex.EUExCallback;
 import org.zywx.wbpalmstar.engine.universalex.EUExUtil;
 
-import android.app.ActivityGroup;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.CookieManager;
@@ -47,6 +47,9 @@ public class EUExSina extends EUExBase {
 	private static final String CALLBACK_LOGIN_STATUS = "uexSina.cbLogin";
 	private String token;
 	private String openId;
+    private static final String BUNDLE_DATA = "data";
+    private static final int MSG_REGISTER_APP = 1;
+    private static final int MSG_LOGIN = 2;
 
 	public EUExSina(Context ctx, EBrowserView view) {
 		super(ctx, view);
@@ -55,53 +58,69 @@ public class EUExSina extends EUExBase {
 		mStatusesAPI = new StatusesAPI(mAccessToken);
 	}
 
-	public void registerApp(String[] args) {
+    public void registerApp(String[] params) {
+        if (params == null || params.length < 1) {
+            errorCallback(0, 0, "error params!");
+            return;
+        }
+        Message msg = new Message();
+        msg.obj = this;
+        msg.what = MSG_REGISTER_APP;
+        Bundle bd = new Bundle();
+        bd.putStringArray(BUNDLE_DATA, params);
+        msg.setData(bd);
+        mHandler.sendMessage(msg);
+    }
 
-		if (mAccessToken != null && mAccessToken.isSessionValid()) {
-			Log.i(TAG, "已经注册过，直接获取注册信息");
-			jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT,
-					EUExCallback.F_C_SUCCESS);
-			jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT,
-			        EUExCallback.F_C_SUCCESS);
-			return;
-		}
+    private void registerAppMsg(String[] args) {
+        if (mAccessToken != null && mAccessToken.isSessionValid()) {
+            Log.i(TAG, "已经注册过，直接获取注册信息");
+            jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT,
+                    EUExCallback.F_C_SUCCESS);
+            jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT,
+                    EUExCallback.F_C_SUCCESS);
+            return;
+        }
 
-		if ((args == null) || (args.length < 2)) {
-			return;
-		}
+        if ((args == null) || (args.length < 2)) {
+            return;
+        }
 
-		final String appKey = args[0];
-		final String redirectUrl = args[2];
+        final String appKey = args[0];
+        final String redirectUrl = args[2];
 
-		((ActivityGroup) mContext).runOnUiThread(new Runnable() {
+        auth(mContext, appKey, redirectUrl, Constants.SCOPE);
+        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        mStatusesAPI = new StatusesAPI(mAccessToken);
+    }
 
-			@Override
-			public void run() {
-				auth(mContext, appKey, redirectUrl, Constants.SCOPE);
-				mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
-				mStatusesAPI = new StatusesAPI(mAccessToken);
-			}
-		});
-	}
-	
-	public void login(String[] params) {
-		if ((params == null) || (params.length < 2)) {
-			return;
-		}
-		final String appKey = params[0];
-		final String redirectUrl = params[1];
-		if(mAccessToken != null && mAccessToken.isSessionValid()) {
-			jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
-		}else {
-			isLogin = true;
-			((ActivityGroup) mContext).runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					auth(mContext, appKey, redirectUrl, Constants.SCOPE);
-				}
-			});
-		}
-	}
+    public void login(String[] params) {
+        if (params == null || params.length < 1) {
+            errorCallback(0, 0, "error params!");
+            return;
+        }
+        Message msg = new Message();
+        msg.obj = this;
+        msg.what = MSG_LOGIN;
+        Bundle bd = new Bundle();
+        bd.putStringArray(BUNDLE_DATA, params);
+        msg.setData(bd);
+        mHandler.sendMessage(msg);
+    }
+
+    private void loginMsg(String[] params) {
+        if ((params == null) || (params.length < 2)) {
+            return;
+        }
+        final String appKey = params[0];
+        final String redirectUrl = params[1];
+        if(mAccessToken != null && mAccessToken.isSessionValid()) {
+            jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
+        }else {
+            isLogin = true;
+            auth(mContext, appKey, redirectUrl, Constants.SCOPE);
+        }
+    }
 
 	public void sendTextContent(String[] args) {
 		if (args != null && args.length > 0) {
@@ -300,4 +319,23 @@ public class EUExSina extends EUExBase {
 	protected boolean clean() {
 		return true;
 	}
+
+    @Override
+    public void onHandleMessage(Message message) {
+        if(message == null){
+            return;
+        }
+        Bundle bundle=message.getData();
+        switch (message.what) {
+
+            case MSG_REGISTER_APP:
+                registerAppMsg(bundle.getStringArray(BUNDLE_DATA));
+                break;
+            case MSG_LOGIN:
+                loginMsg(bundle.getStringArray(BUNDLE_DATA));
+                break;
+            default:
+                super.onHandleMessage(message);
+        }
+    }
 }

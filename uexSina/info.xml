@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexSina" version="3.0.7" build="7">
-		<info>7:新增login登陆接口接口</info>
+        uexName="uexSina" version="3.0.8" build="8">
+		<info>8:去掉插件中的ActivityGroup,配合引擎升级</info>
+        <build>7:新增login登陆接口接口</build>
 		<build>6:修改uexSina插件中的代码错误</build>
 		<build>5:修改uexSina插件中registerCallBack和cbShare回调方法返回值：成功为0，失败为1</build>
         <build>4:修复分享图片时路径解析错误问题</build>

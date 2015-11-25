@@ -10,5 +10,7 @@
 		  <method name="create"/>
 		  <method name="cleanUserInfo"/>
 		  <method name="login"/>
-      </plugin>
+         <method name="getUserInfo"/>
+         <method name="logout" />
+     </plugin>
 </uexplugins>

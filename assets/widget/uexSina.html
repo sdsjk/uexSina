@@ -27,20 +27,25 @@ var cInt = 2;
 		   document.getElementById("showStatus").innerHTML = "返回分享状态码:"+data;
 		};
 		
-		uexSina.registerCallBack = function(opCode,dataType,data){
-		   alert(data);
-		   
+
+		uexSina.cbRegisterApp = function(opCode, dataType,data) {
+		    alert(data);
 		}
 		
 		uexSina.cbLogin = function(opCode,dataType,data) {
 			document.getElementById("selectItem").innerHTML = data;
 		}
-		
+		uexSina.cbGetUserInfo = function(opCode, dataType, data) {
+		    alert(data);
+		}
+		uexSina.cbLogout = function(opCode, dataType, data){
+		    alert(data);
+		}
 	}
 	
 	function login() {
-		var appKey = "1118691550";
-        var registerUrl = "http://www.sina.com";
+		var appKey = "4072168403";
+        var registerUrl = "http://www.dotlink.com";
         uexSina.login(appKey,registerUrl);
 	}
 	
@@ -55,11 +60,15 @@ var cInt = 2;
         uexSina.sendImageContent(realImgPath,content);
     }
     function register(){
-        var appKey = "1118691550";
-        var appSecret = "dd29e3f6e21e03570295bedbca5eb7eb";
-        var registerUrl = "http://www.sina.com";
+        var appKey = "4072168403";
+        var appSecret = "b28223208b965d73c19fab20eab38942";
+        var registerUrl = "http://www.dotlink.com";
         uexSina.registerApp(appKey,appSecret,registerUrl);
     }
+    function getUserInfo() {
+        uexSina.getUserInfo();
+    }
+
 		</script>
   </head>
 <body class="um-vp " ontouchstart>
@@ -74,7 +83,9 @@ var cInt = 2;
             <span>3.分享图片，以及文字，如果图片地址为http://则必须在新浪申请高级权限</span>
             <input class="btn" type="button" value="分享图片" onclick="sharePic();">
             <div class="tcxx" id="showStatus"></div><br>
-			<br>		
+            <input class="btn" type="button" value="获取用户信息" onclick="getUserInfo();">
+			<br>
+            <input class="btn" type="button" value="登出" onclick="uexSina.logout();">
 		</div>
 	</div>
 </body>

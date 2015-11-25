@@ -1,16 +1,8 @@
 package org.zywx.wbpalmstar.plugin.uexsina;
 
-import java.io.InputStream;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.zywx.wbpalmstar.base.BUtility;
-import org.zywx.wbpalmstar.engine.EBrowserView;
-import org.zywx.wbpalmstar.engine.universalex.EUExBase;
-import org.zywx.wbpalmstar.engine.universalex.EUExCallback;
-import org.zywx.wbpalmstar.engine.universalex.EUExUtil;
-
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -20,18 +12,30 @@ import android.util.Log;
 import android.webkit.CookieManager;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 import com.sina.weibo.sdk.auth.WeiboAuth;
 import com.sina.weibo.sdk.auth.WeiboAuthListener;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
 import com.sina.weibo.sdk.exception.WeiboException;
 import com.sina.weibo.sdk.net.RequestListener;
-import com.sina.weibo.sdk.net.WeiboParameters;
+import com.sina.weibo.sdk.openapi.LogoutAPI;
 import com.sina.weibo.sdk.openapi.StatusesAPI;
+import com.sina.weibo.sdk.openapi.UsersAPI;
 import com.sina.weibo.sdk.openapi.models.ErrorInfo;
 import com.sina.weibo.sdk.openapi.models.Status;
+import com.sina.weibo.sdk.openapi.models.User;
 import com.sina.weibo.sdk.utils.LogUtil;
-import com.sina.weibo.sdk.utils.Utility;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.zywx.wbpalmstar.base.BUtility;
+import org.zywx.wbpalmstar.engine.EBrowserView;
+import org.zywx.wbpalmstar.engine.universalex.EUExBase;
+import org.zywx.wbpalmstar.engine.universalex.EUExCallback;
+import org.zywx.wbpalmstar.engine.universalex.EUExUtil;
+
+import java.io.InputStream;
 
 public class EUExSina extends EUExBase {
 	private static final String TAG = "EUExSina";
@@ -41,15 +45,24 @@ public class EUExSina extends EUExBase {
 
 	/** 微博 Web 授权类，提供登陆等功能 */
 	private static WeiboAuth mWeiboAuth;
-	private static final String CALLBACK_GET_REGISTER_STATUS = "uexSina.registerCallBack";
-	private static final String cbRegisterAppFunName = "uexSina.cbRegisterApp";
+    private static final String CALLBACK_GET_REGISTER_STATUS = "uexSina.registerCallBack";
+    private static final String cbRegisterAppFunName = "uexSina.cbRegisterApp";
+
+    private static final String CALLBACK_GET_USER_INFO = "uexSina.cbGetUserInfo";
 	private static final String CALLBACK_SHARE_STATUS = "uexSina.cbShare";
-	private static final String CALLBACK_LOGIN_STATUS = "uexSina.cbLogin";
+    private static final String CALLBACK_LOGIN_STATUS = "uexSina.cbLogin";
+    private static final String CALLBACK_LOGOUT = "uexSina.cbLogout";
+
 	private String token;
 	private String openId;
     private static final String BUNDLE_DATA = "data";
     private static final int MSG_REGISTER_APP = 1;
     private static final int MSG_LOGIN = 2;
+    private static final int MSG_GET_USER_INFO = 3;
+    private static final int MSG_LOGOUT = 4;
+
+	/** 注意：SsoHandler 仅当 SDK 支持 SSO 时有效 */
+	private SsoHandler mSsoHandler;
 
 	public EUExSina(Context ctx, EBrowserView view) {
 		super(ctx, view);
@@ -73,7 +86,8 @@ public class EUExSina extends EUExBase {
     }
 
     private void registerAppMsg(String[] args) {
-        if (mAccessToken != null && mAccessToken.isSessionValid()) {
+        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        if (mAccessToken != null && mAccessToken.isSessionValid() && !TextUtils.isEmpty(mAccessToken.getToken())) {
             Log.i(TAG, "已经注册过，直接获取注册信息");
             jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT,
                     EUExCallback.F_C_SUCCESS);
@@ -114,12 +128,15 @@ public class EUExSina extends EUExBase {
         }
         final String appKey = params[0];
         final String redirectUrl = params[1];
-        if(mAccessToken != null && mAccessToken.isSessionValid()) {
+        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        if (mAccessToken != null && mAccessToken.isSessionValid() && !TextUtils.isEmpty(mAccessToken.getToken())) {
             jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
         }else {
             isLogin = true;
             auth(mContext, appKey, redirectUrl, Constants.SCOPE);
         }
+        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        mStatusesAPI = new StatusesAPI(mAccessToken);
     }
 
 	public void sendTextContent(String[] args) {
@@ -136,6 +153,68 @@ public class EUExSina extends EUExBase {
 			}
 		}
 	}
+
+	public void getUserInfo(String []args) {
+        Message msg = new Message();
+        msg.obj = this;
+        msg.what = MSG_GET_USER_INFO;
+        Bundle bd = new Bundle();
+        bd.putStringArray(BUNDLE_DATA, args);
+        msg.setData(bd);
+        mHandler.sendMessage(msg);
+    }
+	public void getUserInfoMsg(String [] args) {
+        if (mAccessToken == null || TextUtils.isEmpty(mAccessToken.getUid())) {
+            Toast.makeText(mContext, "please login and auth first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        UsersAPI usersAPI = new UsersAPI(mAccessToken);
+        long uid = Long.parseLong(mAccessToken.getUid());
+        usersAPI.show(uid, getUserInfoListener);
+    }
+
+    public void logout(String [] args) {
+        Message msg = new Message();
+        msg.obj = this;
+        msg.what = MSG_LOGOUT;
+        Bundle bd = new Bundle();
+        bd.putStringArray(BUNDLE_DATA, args);
+        msg.setData(bd);
+        mHandler.sendMessage(msg);
+
+    }
+    public void logoutMsg() {
+        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        if (null == mAccessToken || TextUtils.isEmpty(mAccessToken.getToken())) {
+            Toast.makeText(mContext, "尚未检测到登录信息，请确认已经登录成功", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new LogoutAPI(AccessTokenKeeper.readAccessToken(mContext)).logout(new RequestListener() {
+            @Override
+            public void onComplete(String response) {
+                if (!TextUtils.isEmpty(response)) {
+                    try {
+                        JSONObject obj = new JSONObject(response);
+                        String value = obj.getString("result");
+
+                        if ("true".equalsIgnoreCase(value)) {
+                            AccessTokenKeeper.clear(mContext);
+                            jsCallback(CALLBACK_LOGOUT, 0, EUExCallback.F_C_INT, EUExCallback.F_C_SUCCESS);
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onWeiboException(WeiboException e) {
+                jsCallback(CALLBACK_LOGOUT, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
+            }
+        });
+
+    }
 
 	public void sendImageContent(String[] args) {
 		if (mAccessToken == null || !mAccessToken.isSessionValid()
@@ -203,7 +282,10 @@ public class EUExSina extends EUExBase {
 			String scope) {
 		// 创建微博实例
 		mWeiboAuth = new WeiboAuth(mContext, appKey, redirectUrl, Constants.SCOPE);
-		mWeiboAuth.anthorize(new AuthListener());
+		//mWeiboAuth.anthorize(new AuthListener());
+		mSsoHandler = new SsoHandler((Activity)mContext, mWeiboAuth);
+		registerActivityResult();
+		mSsoHandler.authorize(new AuthListener());
 	}
 	
 	/**
@@ -221,11 +303,9 @@ public class EUExSina extends EUExBase {
 			// 从 Bundle 中解析 Token
 			mAccessToken = Oauth2AccessToken.parseAccessToken(values);
 			if (mAccessToken.isSessionValid()) {
-				// 显示 Token
-
 				// 保存 Token 到 SharedPreferences
-				AccessTokenKeeper.writeAccessToken(mContext, mAccessToken);
-				mStatusesAPI = new StatusesAPI(mAccessToken);
+                AccessTokenKeeper.writeAccessToken(mContext, mAccessToken);
+                mStatusesAPI = new StatusesAPI(mAccessToken);
 				AccessTokenKeeper.writeToken(mContext, token);
 				AccessTokenKeeper.writeOpenId(mContext, openId);
 				if(isLogin) {
@@ -252,7 +332,7 @@ public class EUExSina extends EUExBase {
 					jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, code);
 					jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, code);
 				}
-				
+
 			}
 		}
 
@@ -263,17 +343,19 @@ public class EUExSina extends EUExBase {
 
 		@Override
 		public void onWeiboException(WeiboException e) {
-			jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT,
-			        EUExCallback.F_C_FAILED);
-			jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT,
-			        EUExCallback.F_C_FAILED);
+            if(isLogin) {
+                jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
+                isLogin = false;
+            }else {
+                jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
+                jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
+            }
 		}
 	}
 	
 	private String data2Json(Oauth2AccessToken mAccessToken) {
 		JSONObject obj = new JSONObject();
 		try {
-			Log.v("SSSSSS", mAccessToken.toString());
 			obj.put("uid", mAccessToken.getUid());
 			obj.put("expires_in", mAccessToken.getExpiresTime());
 			obj.put("access_token", mAccessToken.getToken());
@@ -315,6 +397,30 @@ public class EUExSina extends EUExBase {
 		}
 	};
 
+    private RequestListener getUserInfoListener = new RequestListener() {
+        @Override
+        public void onComplete(String response) {
+            if (!TextUtils.isEmpty(response)) {
+                Log.d(TAG, "RequestComplete==" + response);
+                User user = User.parse(response);
+                if (user != null) {
+                    jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON,
+                            new Gson().toJson(user));
+                } else {
+                    jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON,
+                            "{\"status\":1, \"msg\":\"can not get user info, please try again.\"}");
+                }
+            }
+        }
+
+        @Override
+        public void onWeiboException(WeiboException e) {
+            LogUtil.e(TAG, e.getMessage());
+            ErrorInfo info = ErrorInfo.parse(e.getMessage());
+            jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON, info.error);
+        }
+    };
+
 	@Override
 	protected boolean clean() {
 		return true;
@@ -325,7 +431,7 @@ public class EUExSina extends EUExBase {
         if(message == null){
             return;
         }
-        Bundle bundle=message.getData();
+		Bundle bundle = message.getData();
         switch (message.what) {
 
             case MSG_REGISTER_APP:
@@ -334,8 +440,25 @@ public class EUExSina extends EUExBase {
             case MSG_LOGIN:
                 loginMsg(bundle.getStringArray(BUNDLE_DATA));
                 break;
+            case MSG_GET_USER_INFO:
+                getUserInfoMsg(bundle.getStringArray(BUNDLE_DATA));
+                break;
+            case MSG_LOGOUT:
+                logoutMsg();
+                break;
             default:
                 super.onHandleMessage(message);
         }
     }
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		// SSO 授权回调
+		// 重要：发起 SSO 登陆的 Activity 必须重写 onActivityResults
+		if (mSsoHandler != null) {
+			mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
+		}
+	}
+
 }

@@ -86,23 +86,11 @@ public class EUExSina extends EUExBase {
     }
 
     private void registerAppMsg(String[] args) {
-        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
-        if (mAccessToken != null && mAccessToken.isSessionValid() && !TextUtils.isEmpty(mAccessToken.getToken())) {
-            Log.i(TAG, "已经注册过，直接获取注册信息");
-            jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT,
-                    EUExCallback.F_C_SUCCESS);
-            jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT,
-                    EUExCallback.F_C_SUCCESS);
-            return;
-        }
-
         if ((args == null) || (args.length < 2)) {
             return;
         }
-
         final String appKey = args[0];
         final String redirectUrl = args[2];
-
         auth(mContext, appKey, redirectUrl, Constants.SCOPE);
         mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
         mStatusesAPI = new StatusesAPI(mAccessToken);
@@ -128,13 +116,9 @@ public class EUExSina extends EUExBase {
         }
         final String appKey = params[0];
         final String redirectUrl = params[1];
-        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
-        if (mAccessToken != null && mAccessToken.isSessionValid() && !TextUtils.isEmpty(mAccessToken.getToken())) {
-            jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
-        }else {
-            isLogin = true;
-            auth(mContext, appKey, redirectUrl, Constants.SCOPE);
-        }
+
+    	isLogin = true;
+		auth(mContext, appKey, redirectUrl, Constants.SCOPE);
         mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
         mStatusesAPI = new StatusesAPI(mAccessToken);
     }

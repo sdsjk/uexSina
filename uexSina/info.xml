@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexSina" version="3.0.8" build="8">
+        uexName="uexSina" version="3.0.9" build="9">
         <info>9:添加login, getUserInfo, logout接口</info>
 		<build>8:去掉插件中的ActivityGroup,配合引擎升级</build>
         <build>7:新增login登陆接口接口</build>

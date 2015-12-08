@@ -38,38 +38,42 @@ import org.zywx.wbpalmstar.engine.universalex.EUExUtil;
 import java.io.InputStream;
 
 public class EUExSina extends EUExBase {
-	private static final String TAG = "EUExSina";
-	private boolean isLogin = false;
-	private Oauth2AccessToken mAccessToken;
-	private StatusesAPI mStatusesAPI;
+    private static final String TAG = "EUExSina";
+    private boolean isLogin = false;
+    private Oauth2AccessToken mAccessToken;
+    private StatusesAPI mStatusesAPI;
 
-	/** 微博 Web 授权类，提供登陆等功能 */
-	private static WeiboAuth mWeiboAuth;
+    /**
+     * 微博 Web 授权类，提供登陆等功能
+     */
+    private static WeiboAuth mWeiboAuth;
     private static final String CALLBACK_GET_REGISTER_STATUS = "uexSina.registerCallBack";
     private static final String cbRegisterAppFunName = "uexSina.cbRegisterApp";
 
     private static final String CALLBACK_GET_USER_INFO = "uexSina.cbGetUserInfo";
-	private static final String CALLBACK_SHARE_STATUS = "uexSina.cbShare";
+    private static final String CALLBACK_SHARE_STATUS = "uexSina.cbShare";
     private static final String CALLBACK_LOGIN_STATUS = "uexSina.cbLogin";
     private static final String CALLBACK_LOGOUT = "uexSina.cbLogout";
 
-	private String token;
-	private String openId;
+    private String token;
+    private String openId;
     private static final String BUNDLE_DATA = "data";
     private static final int MSG_REGISTER_APP = 1;
     private static final int MSG_LOGIN = 2;
     private static final int MSG_GET_USER_INFO = 3;
     private static final int MSG_LOGOUT = 4;
 
-	/** 注意：SsoHandler 仅当 SDK 支持 SSO 时有效 */
-	private SsoHandler mSsoHandler;
+    /**
+     * 注意：SsoHandler 仅当 SDK 支持 SSO 时有效
+     */
+    private SsoHandler mSsoHandler;
 
-	public EUExSina(Context ctx, EBrowserView view) {
-		super(ctx, view);
-		EUExUtil.init(ctx);
-		mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
-		mStatusesAPI = new StatusesAPI(mAccessToken);
-	}
+    public EUExSina(Context ctx, EBrowserView view) {
+        super(ctx, view);
+        EUExUtil.init(ctx);
+        mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
+        mStatusesAPI = new StatusesAPI(mAccessToken);
+    }
 
     public void registerApp(String[] params) {
         if (params == null || params.length < 1) {
@@ -117,28 +121,28 @@ public class EUExSina extends EUExBase {
         final String appKey = params[0];
         final String redirectUrl = params[1];
 
-    	isLogin = true;
-		auth(mContext, appKey, redirectUrl, Constants.SCOPE);
+        isLogin = true;
+        auth(mContext, appKey, redirectUrl, Constants.SCOPE);
         mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
         mStatusesAPI = new StatusesAPI(mAccessToken);
     }
 
-	public void sendTextContent(String[] args) {
-		if (args != null && args.length > 0) {
-			if (mAccessToken != null && mAccessToken.isSessionValid()
-					&& mStatusesAPI != null) {
-				String text = args[0];
-				mStatusesAPI.update(text, null, null, mListener);
-			} else {
-				Toast.makeText(
-						mContext,
-						EUExUtil.getResStringID("weibosdk_demo_toast_auth_register"),
-						Toast.LENGTH_SHORT).show();
-			}
-		}
-	}
+    public void sendTextContent(String[] args) {
+        if (args != null && args.length > 0) {
+            if (mAccessToken != null && mAccessToken.isSessionValid()
+                    && mStatusesAPI != null) {
+                String text = args[0];
+                mStatusesAPI.update(text, null, null, mListener);
+            } else {
+                Toast.makeText(
+                        mContext,
+                        EUExUtil.getResStringID("weibosdk_demo_toast_auth_register"),
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
-	public void getUserInfo(String []args) {
+    public void getUserInfo(String[] args) {
         Message msg = new Message();
         msg.obj = this;
         msg.what = MSG_GET_USER_INFO;
@@ -147,7 +151,8 @@ public class EUExSina extends EUExBase {
         msg.setData(bd);
         mHandler.sendMessage(msg);
     }
-	public void getUserInfoMsg(String [] args) {
+
+    public void getUserInfoMsg(String[] args) {
         if (mAccessToken == null || TextUtils.isEmpty(mAccessToken.getUid())) {
             Toast.makeText(mContext, "please login and auth first", Toast.LENGTH_SHORT).show();
             return;
@@ -157,7 +162,7 @@ public class EUExSina extends EUExBase {
         usersAPI.show(uid, getUserInfoListener);
     }
 
-    public void logout(String [] args) {
+    public void logout(String[] args) {
         Message msg = new Message();
         msg.obj = this;
         msg.what = MSG_LOGOUT;
@@ -167,6 +172,7 @@ public class EUExSina extends EUExBase {
         mHandler.sendMessage(msg);
 
     }
+
     public void logoutMsg() {
         mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
         if (null == mAccessToken || TextUtils.isEmpty(mAccessToken.getToken())) {
@@ -200,186 +206,195 @@ public class EUExSina extends EUExBase {
 
     }
 
-	public void sendImageContent(String[] args) {
-		if (mAccessToken == null || !mAccessToken.isSessionValid()
-				&& mStatusesAPI != null) {
-			Toast.makeText(
-					mContext,
-					EUExUtil.getResStringID("weibosdk_demo_toast_auth_register"),
-					Toast.LENGTH_SHORT).show();
-			return;
-		}
+    public void sendImageContent(String[] args) {
+        if (mAccessToken == null || !mAccessToken.isSessionValid()
+                && mStatusesAPI != null) {
+            Toast.makeText(
+                    mContext,
+                    EUExUtil.getResStringID("weibosdk_demo_toast_auth_register"),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-		if (args != null && args.length > 1) {
-			String imgPath = args[0];
-			String des = args[1];
-			if (imgPath.startsWith("http://")) {
-				mStatusesAPI.uploadUrlText(des, imgPath, null, null, null,
-						mListener);
-			} else {
-				Bitmap bmp = getSinaBitmap(imgPath);
-				if (bmp != null) {
-					mStatusesAPI.upload(des, bmp, null, null, mListener);
-				} else {
-					Toast.makeText(mContext, "Image not exist or Bitmap error",
-							Toast.LENGTH_SHORT).show();
-				}
-			}
-		}
+        if (args != null && args.length > 1) {
+            String imgPath = args[0];
+            String des = args[1];
+            if (imgPath.startsWith("http://")) {
+                mStatusesAPI.uploadUrlText(des, imgPath, null, null, null,
+                        mListener);
+            } else {
+                Bitmap bmp = getSinaBitmap(imgPath);
+                if (bmp != null) {
+                    mStatusesAPI.upload(des, bmp, null, null, mListener);
+                } else {
+                    Toast.makeText(mContext, "Image not exist or Bitmap error",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
 
-	}
+    }
 
-	/*
-	 * 清除用户信息，切换用户授权
-	 */
-	public void cleanUserInfo(String[] params) {
-		if (params.length == 0) {
-			AccessTokenKeeper.clear(mContext);
-			mAccessToken = null;
-			mStatusesAPI = null;
-			CookieManager.getInstance().removeAllCookie(); // 退出
-		}
-	}
+    /*
+     * 清除用户信息，切换用户授权
+     */
+    public void cleanUserInfo(String[] params) {
+        if (params.length == 0) {
+            AccessTokenKeeper.clear(mContext);
+            mAccessToken = null;
+            mStatusesAPI = null;
+            CookieManager.getInstance().removeAllCookie(); // 退出
+        }
+    }
 
-	private Bitmap getSinaBitmap(String path) {
-		Log.i(TAG, "getSinaBitmap " + path);
-		if (TextUtils.isEmpty(path)) {
-			return null;
-		}
+    private Bitmap getSinaBitmap(String path) {
+        Log.i(TAG, "getSinaBitmap " + path);
+        if (TextUtils.isEmpty(path)) {
+            return null;
+        }
 
-		if (path.startsWith("/")) {
-			return BitmapFactory.decodeFile(path);
-		} else {
-			InputStream is;
-			is = BUtility.getInputStreamByResPath(mContext, path);
-			return BitmapFactory.decodeStream(is);
-		}
-	}
+        if (path.startsWith("/")) {
+            return BitmapFactory.decodeFile(path);
+        } else {
+            InputStream is;
+            is = BUtility.getInputStreamByResPath(mContext, path);
+            return BitmapFactory.decodeStream(is);
+        }
+    }
 
-	public String getAbsPath(String path) {
-		return BUtility.makeRealPath(path,
-				this.mBrwView.getCurrentWidget().m_widgetPath,
-				this.mBrwView.getCurrentWidget().m_wgtType);
-	}
+    public String getAbsPath(String path) {
+        return BUtility.makeRealPath(path,
+                this.mBrwView.getCurrentWidget().m_widgetPath,
+                this.mBrwView.getCurrentWidget().m_wgtType);
+    }
 
-	private void auth(Context mContext, String appKey, String redirectUrl,
-			String scope) {
-		// 创建微博实例
-		mWeiboAuth = new WeiboAuth(mContext, appKey, redirectUrl, Constants.SCOPE);
-		//mWeiboAuth.anthorize(new AuthListener());
-		mSsoHandler = new SsoHandler((Activity)mContext, mWeiboAuth);
-		registerActivityResult();
-		mSsoHandler.authorize(new AuthListener());
-	}
-	
-	/**
-	 * 微博认证授权回调类。 1. SSO 授权时，需要在 {@link #onActivityResult} 中调用
-	 * {@link SsoHandler#authorizeCallBack} 后， 该回调才会被执行。 2. 非 SSO
-	 * 授权时，当授权结束后，该回调就会被执行。 当授权成功后，请保存该 access_token、expires_in、uid 等信息到
-	 * SharedPreferences 中。
-	 */
-	class AuthListener implements WeiboAuthListener {
+    private void auth(Context mContext, String appKey, String redirectUrl,
+                      String scope) {
+        // 创建微博实例
+        mWeiboAuth = new WeiboAuth(mContext, appKey, redirectUrl, Constants.SCOPE);
+        //mWeiboAuth.anthorize(new AuthListener());
+        mSsoHandler = new SsoHandler((Activity) mContext, mWeiboAuth);
+        registerActivityResult();
+        mSsoHandler.authorize(new AuthListener());
+    }
 
-		@Override
-		public void onComplete(Bundle values) {
-			token = values.getString("access_token");
-			openId = values.getString("uid");
-			// 从 Bundle 中解析 Token
-			mAccessToken = Oauth2AccessToken.parseAccessToken(values);
-			if (mAccessToken.isSessionValid()) {
-				// 保存 Token 到 SharedPreferences
+    /**
+     * 微博认证授权回调类。 1. SSO 授权时，需要在 {@link #onActivityResult} 中调用
+     * {@link SsoHandler#authorizeCallBack} 后， 该回调才会被执行。 2. 非 SSO
+     * 授权时，当授权结束后，该回调就会被执行。 当授权成功后，请保存该 access_token、expires_in、uid 等信息到
+     * SharedPreferences 中。
+     */
+    class AuthListener implements WeiboAuthListener {
+
+        @Override
+        public void onComplete(Bundle values) {
+            token = values.getString("access_token");
+            openId = values.getString("uid");
+            // 从 Bundle 中解析 Token
+            mAccessToken = Oauth2AccessToken.parseAccessToken(values);
+            if (mAccessToken.isSessionValid()) {
+                // 保存 Token 到 SharedPreferences
                 AccessTokenKeeper.writeAccessToken(mContext, mAccessToken);
                 mStatusesAPI = new StatusesAPI(mAccessToken);
-				AccessTokenKeeper.writeToken(mContext, token);
-				AccessTokenKeeper.writeOpenId(mContext, openId);
-				if(isLogin) {
-					jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
-					isLogin = false;
-				}else {
-					jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_SUCCESS);
-					jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, EUExCallback.F_C_SUCCESS);
-				}
-			} else {
-				// 以下几种情况，您会收到 Code：
-				// 1. 当您未在平台上注册的应用程序的包名与签名时；
-				// 2. 当您注册的应用程序包名与签名不正确时；
-				// 3. 当您在平台上注册的包名和签名与您当前测试的应用的包名和签名不匹配时。
-				String code = values.getString("code");
-				String message = mContext.getString(EUExUtil.getResStringID("weibosdk_demo_toast_auth_failed"));
-				if (!TextUtils.isEmpty(code)) {
-					message = message + "\nObtained the code: " + code;
-				}
-				if(isLogin) {
-					jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, code);
-					isLogin = false;
-				}else {
-					jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, code);
-					jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, code);
-				}
+                AccessTokenKeeper.writeToken(mContext, token);
+                AccessTokenKeeper.writeOpenId(mContext, openId);
+                if (isLogin) {
+                    jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
+                    isLogin = false;
+                } else {
+                    jsCallbackString(CALLBACK_GET_REGISTER_STATUS, token, openId, EUExCallback.F_C_SUCCESS);
+                    jsCallbackString(cbRegisterAppFunName, token, openId, EUExCallback.F_C_SUCCESS);
+                }
+            } else {
+                // 以下几种情况，您会收到 Code：
+                // 1. 当您未在平台上注册的应用程序的包名与签名时；
+                // 2. 当您注册的应用程序包名与签名不正确时；
+                // 3. 当您在平台上注册的包名和签名与您当前测试的应用的包名和签名不匹配时。
+                String code = values.getString("code");
+                String message = mContext.getString(EUExUtil.getResStringID("weibosdk_demo_toast_auth_failed"));
+                if (!TextUtils.isEmpty(code)) {
+                    message = message + "\nObtained the code: " + code;
+                }
+                if (isLogin) {
+                    jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, code);
+                    isLogin = false;
+                } else {
+                    jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, code);
+                    jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, code);
+                }
 
-			}
-		}
+            }
+        }
 
-		@Override
-		public void onCancel() {
-			Toast.makeText(mContext, EUExUtil.getResStringID("weibosdk_demo_toast_auth_canceled"), Toast.LENGTH_LONG).show();
-		}
+        public final void jsCallbackString(String inCallbackName, String inOpCode,
+                                           String inDataType, int inData) {
+            String js = SCRIPT_HEADER + "if(" + inCallbackName + "){"
+                    + inCallbackName + "(" + inOpCode + "," + inDataType + ","
+                    + inData + SCRIPT_TAIL;
+            // mBrwView.loadUrl(js);
+            evaluateScript(mBrwView.getWindowName(), 0, js);
+        }
 
-		@Override
-		public void onWeiboException(WeiboException e) {
-            if(isLogin) {
+        @Override
+        public void onCancel() {
+            Toast.makeText(mContext, EUExUtil.getResStringID("weibosdk_demo_toast_auth_canceled"), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onWeiboException(WeiboException e) {
+            if (isLogin) {
                 jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
                 isLogin = false;
-            }else {
+            } else {
                 jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
                 jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
             }
-		}
-	}
-	
-	private String data2Json(Oauth2AccessToken mAccessToken) {
-		JSONObject obj = new JSONObject();
-		try {
-			obj.put("uid", mAccessToken.getUid());
-			obj.put("expires_in", mAccessToken.getExpiresTime());
-			obj.put("access_token", mAccessToken.getToken());
-			obj.put("refresh_token", mAccessToken.getRefreshToken());
-		} catch (JSONException e) {
-			e.printStackTrace();
-			return "";
-		}
-		return obj.toString();
-	}
-	
-	/**
-	 * 微博 OpenAPI 回调接口。
-	 */
-	private RequestListener mListener = new RequestListener() {
-		@Override
-		public void onComplete(String response) {
-			if (!TextUtils.isEmpty(response)) {
-				Log.d(TAG, "RequestComplete==" + response);
-				if (response.startsWith("{\"created_at\"")) {
-					// 调用 Status#parse 解析字符串成微博对象
-					Status status = Status.parse(response);
-					jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT,
-					        EUExCallback.F_C_SUCCESS);
-				} else {
-					jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT,
-					        EUExCallback.F_C_FAILED);
-				}
-			}
-		}
+        }
+    }
 
-		@Override
-		public void onWeiboException(WeiboException e) {
-			LogUtil.e(TAG, e.getMessage());
-			Log.e(TAG, "onWeiboException" + e.getMessage());
-			ErrorInfo info = ErrorInfo.parse(e.getMessage());
-			String errCode = info.error_code;
-			jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT, errCode);
-		}
-	};
+    private String data2Json(Oauth2AccessToken mAccessToken) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("uid", mAccessToken.getUid());
+            obj.put("expires_in", mAccessToken.getExpiresTime());
+            obj.put("access_token", mAccessToken.getToken());
+            obj.put("refresh_token", mAccessToken.getRefreshToken());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
+        return obj.toString();
+    }
+
+    /**
+     * 微博 OpenAPI 回调接口。
+     */
+    private RequestListener mListener = new RequestListener() {
+        @Override
+        public void onComplete(String response) {
+            if (!TextUtils.isEmpty(response)) {
+                Log.d(TAG, "RequestComplete==" + response);
+                if (response.startsWith("{\"created_at\"")) {
+                    // 调用 Status#parse 解析字符串成微博对象
+                    Status status = Status.parse(response);
+                    jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT,
+                            EUExCallback.F_C_SUCCESS);
+                } else {
+                    jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT,
+                            EUExCallback.F_C_FAILED);
+                }
+            }
+        }
+
+        @Override
+        public void onWeiboException(WeiboException e) {
+            LogUtil.e(TAG, e.getMessage());
+            Log.e(TAG, "onWeiboException" + e.getMessage());
+            ErrorInfo info = ErrorInfo.parse(e.getMessage());
+            String errCode = info.error_code;
+            jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT, errCode);
+        }
+    };
 
     private RequestListener getUserInfoListener = new RequestListener() {
         @Override
@@ -405,17 +420,17 @@ public class EUExSina extends EUExBase {
         }
     };
 
-	@Override
-	protected boolean clean() {
-		return true;
-	}
+    @Override
+    protected boolean clean() {
+        return true;
+    }
 
     @Override
     public void onHandleMessage(Message message) {
-        if(message == null){
+        if (message == null) {
             return;
         }
-		Bundle bundle = message.getData();
+        Bundle bundle = message.getData();
         switch (message.what) {
 
             case MSG_REGISTER_APP:
@@ -435,14 +450,14 @@ public class EUExSina extends EUExBase {
         }
     }
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		// SSO 授权回调
-		// 重要：发起 SSO 登陆的 Activity 必须重写 onActivityResults
-		if (mSsoHandler != null) {
-			mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
-		}
-	}
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // SSO 授权回调
+        // 重要：发起 SSO 登陆的 Activity 必须重写 onActivityResults
+        if (mSsoHandler != null) {
+            mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
+        }
+    }
 
 }

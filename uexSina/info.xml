@@ -1,16 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexSina" version="3.0.9" build="9">
-        <info>9:添加login, getUserInfo, logout接口</info>
-		<build>8:去掉插件中的ActivityGroup,配合引擎升级</build>
+        build="10" uexName="uexSina" version="3.0.10">
+        <info>10:cbRegisterApp回调openId和token</info>
+        <build>9:添加login, getUserInfo, logout接口</build>
+        <build>8:去掉插件中的ActivityGroup,配合引擎升级</build>
         <build>7:新增login登陆接口接口</build>
-		<build>6:修改uexSina插件中的代码错误</build>
-		<build>5:修改uexSina插件中registerCallBack和cbShare回调方法返回值：成功为0，失败为1</build>
+        <build>6:修改uexSina插件中的代码错误</build>
+        <build>5:修改uexSina插件中registerCallBack和cbShare回调方法返回值：成功为0，失败为1</build>
         <build>4:修复分享图片时路径解析错误问题</build>
         <build>3:修复适配3.0新引擎的问题</build>
         <build>2:修复回调数据与文档不一致的问题</build>
         <build>1:修复插件配置问题</build>
-		<build>0:新浪分享功能插件</build>
+        <build>0:新浪分享功能插件</build>
     </plugin>
 </uexplugins>

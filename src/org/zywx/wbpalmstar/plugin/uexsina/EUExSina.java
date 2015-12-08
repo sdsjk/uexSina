@@ -332,7 +332,7 @@ public class EUExSina extends EUExBase {
                     + inCallbackName + "(" + inOpCode + "," + inDataType + ","
                     + inData + SCRIPT_TAIL;
             // mBrwView.loadUrl(js);
-            evaluateScript(mBrwView.getWindowName(), 0, js);
+            mBrwView.addUriTask(js);
         }
 
         @Override

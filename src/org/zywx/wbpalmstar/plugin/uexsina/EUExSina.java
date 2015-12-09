@@ -329,7 +329,7 @@ public class EUExSina extends EUExBase {
         public final void jsCallbackString(String inCallbackName, String inOpCode,
                                            String inDataType, int inData) {
             String js = SCRIPT_HEADER + "if(" + inCallbackName + "){"
-                    + inCallbackName + "(" + inOpCode + "," + inDataType + ","
+                    + inCallbackName + "('" + inOpCode + "'," + inDataType + ","
                     + inData + SCRIPT_TAIL;
             // mBrwView.loadUrl(js);
             mBrwView.addUriTask(js);

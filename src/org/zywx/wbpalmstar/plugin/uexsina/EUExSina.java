@@ -302,8 +302,8 @@ public class EUExSina extends EUExBase {
                     jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
                     isLogin = false;
                 } else {
-                    jsCallbackString(CALLBACK_GET_REGISTER_STATUS, token, openId, EUExCallback.F_C_SUCCESS);
-                    jsCallbackString(cbRegisterAppFunName, token, openId, EUExCallback.F_C_SUCCESS);
+                    jsCallbackString(CALLBACK_GET_REGISTER_STATUS, openId, token, EUExCallback.F_C_SUCCESS);
+                    jsCallbackString(cbRegisterAppFunName, openId, token, EUExCallback.F_C_SUCCESS);
                 }
             } else {
                 // 以下几种情况，您会收到 Code：

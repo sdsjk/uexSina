@@ -252,6 +252,8 @@ public class EUExSina extends EUExBase {
         if (TextUtils.isEmpty(path)) {
             return null;
         }
+        path = BUtility.makeRealPath(path, mBrwView.getCurrentWidget().getWidgetPath(), mBrwView.getCurrentWidget().m_wgtType);
+        Log.i(TAG, "realPath " + path);
 
         if (path.startsWith("/")) {
             return BitmapFactory.decodeFile(path);

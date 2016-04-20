@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-       	uexName="uexSina" version="3.0.11" build="11">
+       	uexName="uexSina" version="3.0.12" build="12">
+        <info>12:修复图片路径读取的问题</info>
         <info>11:修复了分享图片不能读取wgts://格式的文件问题</info>
         <build>10:cbRegisterApp回调openId和token</build>
         <build>9:添加login, getUserInfo, logout接口</build>

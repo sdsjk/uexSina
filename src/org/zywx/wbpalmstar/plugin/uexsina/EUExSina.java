@@ -248,26 +248,21 @@ public class EUExSina extends EUExBase {
     }
 
     private Bitmap getSinaBitmap(String path) {
-        Log.i(TAG, "getSinaBitmap " + path);
         if (TextUtils.isEmpty(path)) {
             return null;
         }
-        path = BUtility.makeRealPath(path, mBrwView.getCurrentWidget().getWidgetPath(), mBrwView.getCurrentWidget().m_wgtType);
-        Log.i(TAG, "realPath " + path);
-
-        if (path.startsWith("/")) {
-            return BitmapFactory.decodeFile(path);
-        } else {
+        String realPath = BUtility.makeRealPath(
+                BUtility.makeUrl(mBrwView.getCurrentUrl(), path),
+                mBrwView.getCurrentWidget().m_widgetPath,
+                mBrwView.getCurrentWidget().m_wgtType);
+        if (realPath.startsWith("/")) {
+            return BitmapFactory.decodeFile(realPath);
+        } else if (realPath.startsWith(BUtility.F_Widget_RES_path)) {
             InputStream is;
             is = BUtility.getInputStreamByResPath(mContext, path);
             return BitmapFactory.decodeStream(is);
         }
-    }
-
-    public String getAbsPath(String path) {
-        return BUtility.makeRealPath(path,
-                this.mBrwView.getCurrentWidget().m_widgetPath,
-                this.mBrwView.getCurrentWidget().m_wgtType);
+        return null;
     }
 
     private void auth(Context mContext, String appKey, String redirectUrl,

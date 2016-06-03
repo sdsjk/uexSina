@@ -55,6 +55,12 @@ public class EUExSina extends EUExBase {
     private static final String CALLBACK_LOGIN_STATUS = "uexSina.cbLogin";
     private static final String CALLBACK_LOGOUT = "uexSina.cbLogout";
 
+    private String registerAppFunc;
+    private String getUserInfoFunc;
+    private String loginFunc;
+    private String shareFunc;
+    private String logoutFunc;
+
     private String token;
     private String openId;
     private static final String BUNDLE_DATA = "data";
@@ -90,18 +96,21 @@ public class EUExSina extends EUExBase {
     }
 
     private void registerAppMsg(String[] args) {
-        if ((args == null) || (args.length < 2)) {
+        if ((args == null) || (args.length < 3)) {
             return;
         }
         final String appKey = args[0];
         final String redirectUrl = args[2];
+        if (args.length == 4) {
+            registerAppFunc = args[3];
+        }
         auth(mContext, appKey, redirectUrl, Constants.SCOPE);
         mAccessToken = AccessTokenKeeper.readAccessToken(mContext);
         mStatusesAPI = new StatusesAPI(mAccessToken);
     }
 
     public void login(String[] params) {
-        if (params == null || params.length < 1) {
+        if (params == null || params.length < 2) {
             errorCallback(0, 0, "error params!");
             return;
         }
@@ -120,6 +129,9 @@ public class EUExSina extends EUExBase {
         }
         final String appKey = params[0];
         final String redirectUrl = params[1];
+        if (params.length == 3) {
+            loginFunc = params[2];
+        }
 
         isLogin = true;
         auth(mContext, appKey, redirectUrl, Constants.SCOPE);
@@ -132,6 +144,9 @@ public class EUExSina extends EUExBase {
             if (mAccessToken != null && mAccessToken.isSessionValid()
                     && mStatusesAPI != null) {
                 String text = args[0];
+                if (args.length == 2) {
+                    shareFunc = args[1];
+                }
                 mStatusesAPI.update(text, null, null, mListener);
             } else {
                 Toast.makeText(
@@ -157,12 +172,18 @@ public class EUExSina extends EUExBase {
             Toast.makeText(mContext, "please login and auth first", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (args != null && args.length == 1) {
+            getUserInfoFunc = args[0];
+        }
         UsersAPI usersAPI = new UsersAPI(mAccessToken);
         long uid = Long.parseLong(mAccessToken.getUid());
         usersAPI.show(uid, getUserInfoListener);
     }
 
     public void logout(String[] args) {
+        if (args != null && args.length == 1) {
+            loginFunc = args[0];
+        }
         Message msg = new Message();
         msg.obj = this;
         msg.what = MSG_LOGOUT;
@@ -190,6 +211,9 @@ public class EUExSina extends EUExBase {
                         if ("true".equalsIgnoreCase(value)) {
                             AccessTokenKeeper.clear(mContext);
                             jsCallback(CALLBACK_LOGOUT, 0, EUExCallback.F_C_INT, EUExCallback.F_C_SUCCESS);
+                            if (null != logoutFunc) {
+                                callbackToJs(Integer.parseInt(loginFunc), false, EUExCallback.F_C_SUCCESS);
+                            }
 
                         }
                     } catch (JSONException e) {
@@ -201,6 +225,9 @@ public class EUExSina extends EUExBase {
             @Override
             public void onWeiboException(WeiboException e) {
                 jsCallback(CALLBACK_LOGOUT, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
+                if (null != logoutFunc) {
+                    callbackToJs(Integer.parseInt(loginFunc), false, EUExCallback.F_C_FAILED);
+                }
             }
         });
 
@@ -296,9 +323,15 @@ public class EUExSina extends EUExBase {
                 AccessTokenKeeper.writeToken(mContext, token);
                 AccessTokenKeeper.writeOpenId(mContext, openId);
                 if (isLogin) {
-                    jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken));
+                    if (null != loginFunc) {
+                        callbackToJs(Integer.parseInt(loginFunc), false, data2Json(mAccessToken));
+                    }
+                    jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken).toString());
                     isLogin = false;
                 } else {
+                    if (null != registerAppFunc) {
+                        callbackToJs(Integer.parseInt(registerAppFunc), false, openId, token);
+                    }
                     jsCallbackString(CALLBACK_GET_REGISTER_STATUS, openId, token, EUExCallback.F_C_SUCCESS);
                     jsCallbackString(cbRegisterAppFunName, openId, token, EUExCallback.F_C_SUCCESS);
                 }
@@ -313,9 +346,15 @@ public class EUExSina extends EUExBase {
                     message = message + "\nObtained the code: " + code;
                 }
                 if (isLogin) {
+                    if (null != loginFunc) {
+                        callbackToJs(Integer.parseInt(loginFunc), false, code);
+                    }
                     jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, code);
                     isLogin = false;
                 } else {
+                    if (null != registerAppFunc) {
+                        callbackToJs(Integer.parseInt(registerAppFunc), false, code);
+                    }
                     jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, code);
                     jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, code);
                 }
@@ -340,16 +379,22 @@ public class EUExSina extends EUExBase {
         @Override
         public void onWeiboException(WeiboException e) {
             if (isLogin) {
+                if (null != loginFunc) {
+                    callbackToJs(Integer.parseInt(loginFunc), false, EUExCallback.F_C_FAILED);
+                }
                 jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
                 isLogin = false;
             } else {
+                if (null != registerAppFunc) {
+                    callbackToJs(Integer.parseInt(registerAppFunc), false, EUExCallback.F_C_FAILED);
+                }
                 jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
                 jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
             }
         }
     }
 
-    private String data2Json(Oauth2AccessToken mAccessToken) {
+    private JSONObject data2Json(Oauth2AccessToken mAccessToken) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("uid", mAccessToken.getUid());
@@ -358,9 +403,9 @@ public class EUExSina extends EUExBase {
             obj.put("refresh_token", mAccessToken.getRefreshToken());
         } catch (JSONException e) {
             e.printStackTrace();
-            return "";
+            return null;
         }
-        return obj.toString();
+        return obj;
     }
 
     /**
@@ -376,9 +421,15 @@ public class EUExSina extends EUExBase {
                     Status status = Status.parse(response);
                     jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT,
                             EUExCallback.F_C_SUCCESS);
+                    if (shareFunc != null) {
+                        callbackToJs(Integer.parseInt(shareFunc), false, EUExCallback.F_C_SUCCESS);
+                    }
                 } else {
                     jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT,
                             EUExCallback.F_C_FAILED);
+                    if (shareFunc != null) {
+                        callbackToJs(Integer.parseInt(shareFunc), false, EUExCallback.F_C_FAILED);
+                    }
                 }
             }
         }
@@ -390,6 +441,9 @@ public class EUExSina extends EUExBase {
             ErrorInfo info = ErrorInfo.parse(e.getMessage());
             String errCode = info.error_code;
             jsCallback(CALLBACK_SHARE_STATUS, 0, EUExCallback.F_C_INT, errCode);
+            if (shareFunc != null) {
+                callbackToJs(Integer.parseInt(shareFunc), false, errCode);
+            }
         }
     };
 
@@ -400,11 +454,22 @@ public class EUExSina extends EUExBase {
                 Log.d(TAG, "RequestComplete==" + response);
                 User user = User.parse(response);
                 if (user != null) {
-                    jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON,
-                            new Gson().toJson(user));
+                    String result = new Gson().toJson(user);
+                    jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON, result);
+                    if (getUserInfoFunc != null) {
+                        try {
+                            JSONObject obj = new JSONObject(result);
+                            callbackToJs(Integer.parseInt(getUserInfoFunc), false, obj);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 } else {
-                    jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON,
-                            "{\"status\":1, \"msg\":\"can not get user info, please try again.\"}");
+                    String result = "{\"status\":1, \"msg\":\"can not get user info, please try again.\"}";
+                    jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON, result);
+                    if (getUserInfoFunc != null) {
+                        callbackToJs(Integer.parseInt(getUserInfoFunc), false, result);
+                    }
                 }
             }
         }
@@ -414,6 +479,9 @@ public class EUExSina extends EUExBase {
             LogUtil.e(TAG, e.getMessage());
             ErrorInfo info = ErrorInfo.parse(e.getMessage());
             jsCallback(CALLBACK_GET_USER_INFO, 0, EUExCallback.F_C_JSON, info.error);
+            if (getUserInfoFunc != null) {
+                callbackToJs(Integer.parseInt(getUserInfoFunc), false, info.error);
+            }
         }
     };
 

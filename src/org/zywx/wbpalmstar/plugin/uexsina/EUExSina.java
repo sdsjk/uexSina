@@ -182,7 +182,7 @@ public class EUExSina extends EUExBase {
 
     public void logout(String[] args) {
         if (args != null && args.length == 1) {
-            loginFunc = args[0];
+            logoutFunc = args[0];
         }
         Message msg = new Message();
         msg.obj = this;
@@ -212,7 +212,7 @@ public class EUExSina extends EUExBase {
                             AccessTokenKeeper.clear(mContext);
                             jsCallback(CALLBACK_LOGOUT, 0, EUExCallback.F_C_INT, EUExCallback.F_C_SUCCESS);
                             if (null != logoutFunc) {
-                                callbackToJs(Integer.parseInt(loginFunc), false, EUExCallback.F_C_SUCCESS);
+                                callbackToJs(Integer.parseInt(logoutFunc), false, EUExCallback.F_C_SUCCESS);
                             }
 
                         }
@@ -246,6 +246,9 @@ public class EUExSina extends EUExBase {
         if (args != null && args.length > 1) {
             String imgPath = args[0];
             String des = args[1];
+            if (args.length ==3) {
+                shareFunc = args[2];
+            }
             if (imgPath.startsWith("http://")) {
                 mStatusesAPI.uploadUrlText(des, imgPath, null, null, null,
                         mListener);

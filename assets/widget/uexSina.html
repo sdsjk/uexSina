@@ -17,31 +17,7 @@
     <script src="js/zy_click.js">
     </script>
     <script type="text/javascript">
-		var cText = 0;
-var cJson = 1;
-var cInt = 2;
 
-	window.uexOnload = function(){
-        uexSina.cbShare=function(opCode,dataType,data){
-		   alert(data);
-		   document.getElementById("showStatus").innerHTML = "返回分享状态码:"+data;
-		};
-
-
-		uexSina.cbRegisterApp = function(opCode, dataType,data) {
-		    alert(data);
-		}
-
-		uexSina.cbLogin = function(opCode,dataType,data) {
-			document.getElementById("selectItem").innerHTML = data;
-		}
-		uexSina.cbGetUserInfo = function(opCode, dataType, data) {
-		    alert(data);
-		}
-		uexSina.cbLogout = function(opCode, dataType, data){
-		    alert(data);
-		}
-	}
 	var commonCallback = function(data) {
 	    alert("commonCallback:" + JSON.stringify(data));
 	}
@@ -54,13 +30,17 @@ var cInt = 2;
     function shareText(){
         //分享文字
         var txt = "中国最大的移动中间平台AppCan对新浪微博分享支持测试";
-        uexSina.sendTextContent(txt, commonCallback);
+        uexSina.sendTextContent(txt, function(data) {
+            alert(data);
+        });
     }
 	function sharePic(){
         var content = "中国最大的移动中间平台AppCan对新浪微博分享的图片支持测试";
         var realImgPath = "res://sotower.png";//http:// 本地
-        var realImgPath = "wgts://sotower.png";
-        uexSina.sendImageContent(realImgPath,content, commonCallback);
+        //var realImgPath = "wgts://sotower.png";
+        uexSina.sendImageContent(realImgPath, content,function(data) {
+            alert(data);
+        });
     }
     function register(){
         var appKey = "4072168403";
@@ -74,6 +54,11 @@ var cInt = 2;
         uexSina.getUserInfo(commonCallback);
     }
 
+    function logout() {
+        uexSina.logout(function(data) {
+            alert(data);
+        });
+    }
 		</script>
   </head>
 <body class="um-vp " ontouchstart>
@@ -90,7 +75,7 @@ var cInt = 2;
             <div class="tcxx" id="showStatus"></div><br>
             <input class="btn" type="button" value="获取用户信息" onclick="getUserInfo();">
 			<br>
-            <input class="btn" type="button" value="登出" onclick="uexSina.logout();">
+            <input class="btn" type="button" value="登出" onclick="logout();">
 		</div>
 	</div>
 </body>

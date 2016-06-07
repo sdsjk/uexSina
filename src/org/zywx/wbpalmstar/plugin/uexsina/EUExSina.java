@@ -333,7 +333,16 @@ public class EUExSina extends EUExBase {
                     isLogin = false;
                 } else {
                     if (null != registerAppFunc) {
-                        callbackToJs(Integer.parseInt(registerAppFunc), false, openId, token);
+                        try {
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("openId", openId);
+                            jsonObject.put("token", token);
+                            jsonObject.put("code",EUExCallback.F_C_SUCCESS );
+                            callbackToJs(Integer.parseInt(registerAppFunc), false, jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                     jsCallbackString(CALLBACK_GET_REGISTER_STATUS, openId, token, EUExCallback.F_C_SUCCESS);
                     jsCallbackString(cbRegisterAppFunName, openId, token, EUExCallback.F_C_SUCCESS);
@@ -356,7 +365,13 @@ public class EUExSina extends EUExBase {
                     isLogin = false;
                 } else {
                     if (null != registerAppFunc) {
-                        callbackToJs(Integer.parseInt(registerAppFunc), false, code);
+                        try {
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("code",EUExCallback.F_C_FAILED );
+                            callbackToJs(Integer.parseInt(registerAppFunc), false, jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                     jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, code);
                     jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, code);
@@ -389,7 +404,13 @@ public class EUExSina extends EUExBase {
                 isLogin = false;
             } else {
                 if (null != registerAppFunc) {
-                    callbackToJs(Integer.parseInt(registerAppFunc), false, EUExCallback.F_C_FAILED);
+                    try {
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("code",EUExCallback.F_C_FAILED );
+                        callbackToJs(Integer.parseInt(registerAppFunc), false, jsonObject);
+                    } catch (JSONException e1) {
+                        e1.printStackTrace();
+                    }
                 }
                 jsCallback(CALLBACK_GET_REGISTER_STATUS, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);
                 jsCallback(cbRegisterAppFunName, 0, EUExCallback.F_C_INT, EUExCallback.F_C_FAILED);

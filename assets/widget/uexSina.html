@@ -18,13 +18,16 @@
     </script>
     <script type="text/javascript">
 
-	var commonCallback = function(data) {
-	    console.log("commonCallback:" + JSON.stringify(data));
-	    alert("commonCallback:" + JSON.stringify(data));
+	var commonCallback = function(error, data) {
+         if(!error){
+            alert(data.uid);
+         }else{
+            alert("失败");
+         }
 	}
 	function login() {
-		var appKey = "4072168403";
-        var registerUrl = "http://www.dotlink.com";
+		var appKey = "3845409824";
+        var registerUrl = "https://api.weibo.com/oauth2/default.html";
         uexSina.login(appKey,registerUrl, commonCallback);
 	}
 
@@ -44,11 +47,11 @@
         });
     }
     function register(){
-        var appKey = "4072168403";
-        var appSecret = "b28223208b965d73c19fab20eab38942";
-        var registerUrl = "http://www.dotlink.com";
-        uexSina.registerApp(appKey,appSecret,registerUrl, function(openId, token) {
-            alert("openId:" + openId + "    token:" + token);
+        var appKey = "3845409824";
+        var appSecret = "6baa661d49374c9da3ea9cab1c406ab6";
+        var registerUrl = "https://api.weibo.com/oauth2/default.html";
+        uexSina.registerApp(appKey,appSecret,registerUrl, function(data) {
+            alert("openId:" + data.code);
         });
     }
     function getUserInfo() {

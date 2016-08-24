@@ -327,7 +327,7 @@ public class EUExSina extends EUExBase {
                 AccessTokenKeeper.writeOpenId(mContext, openId);
                 if (isLogin) {
                     if (null != loginFunc) {
-                        callbackToJs(Integer.parseInt(loginFunc), false, data2Json(mAccessToken));
+                        callbackToJs(Integer.parseInt(loginFunc), false, EUExCallback.F_C_SUCCESS, data2Json(mAccessToken));
                     }
                     jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, data2Json(mAccessToken).toString());
                     isLogin = false;
@@ -359,7 +359,7 @@ public class EUExSina extends EUExBase {
                 }
                 if (isLogin) {
                     if (null != loginFunc) {
-                        callbackToJs(Integer.parseInt(loginFunc), false, code);
+                        callbackToJs(Integer.parseInt(loginFunc), false, EUExCallback.F_C_SUCCESS, code);
                     }
                     jsCallback(CALLBACK_LOGIN_STATUS, 0, EUExCallback.F_C_INT, code);
                     isLogin = false;

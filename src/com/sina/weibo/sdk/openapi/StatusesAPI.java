@@ -76,10 +76,10 @@ public class StatusesAPI extends AbsOpenAPI {
     static {
         sAPIList.put(READ_API_FRIENDS_TIMELINE, API_BASE_URL + "/friends_timeline.json");
         sAPIList.put(READ_API_MENTIONS,         API_BASE_URL + "/mentions.json");
-        sAPIList.put(WRITE_API_REPOST,          API_BASE_URL + "/repost.json");
-        sAPIList.put(WRITE_API_UPDATE,          API_BASE_URL + "/update.json");
-        sAPIList.put(WRITE_API_UPLOAD,          API_BASE_URL + "/upload.json");
-        sAPIList.put(WRITE_API_UPLOAD_URL_TEXT, API_BASE_URL + "/upload_url_text.json");
+        sAPIList.put(WRITE_API_REPOST,          API_BASE_URL + "/share.json");
+        sAPIList.put(WRITE_API_UPDATE,          API_BASE_URL + "/share.json");
+        sAPIList.put(WRITE_API_UPLOAD,          API_BASE_URL + "/share.json");
+        sAPIList.put(WRITE_API_UPLOAD_URL_TEXT, API_BASE_URL + "/share.json");
     }
 
     /**

@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-       	uexName="uexSina" version="4.0.0" build="0">
-        <info>0:4.0</info>
+       	uexName="uexSina" version="4.0.3" build="0">
+        <info>0:4.1:更新分享接口，修复分享不成功的问题，后台平台中要写入安全域</info>
+        <build>0:4.0</build>
     </plugin>
 </uexplugins>

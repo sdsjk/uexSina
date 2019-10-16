@@ -13,8 +13,8 @@ import android.webkit.CookieManager;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.sina.weibo.sdk.auth.AuthInfo;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
-import com.sina.weibo.sdk.auth.WeiboAuth;
 import com.sina.weibo.sdk.auth.WeiboAuthListener;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
 import com.sina.weibo.sdk.exception.WeiboException;
@@ -46,7 +46,7 @@ public class EUExSina extends EUExBase {
     /**
      * 微博 Web 授权类，提供登陆等功能
      */
-    private static WeiboAuth mWeiboAuth;
+    private static AuthInfo mWeiboAuth;
     private static final String CALLBACK_GET_REGISTER_STATUS = "uexSina.registerCallBack";
     private static final String cbRegisterAppFunName = "uexSina.cbRegisterApp";
 
@@ -298,7 +298,7 @@ public class EUExSina extends EUExBase {
     private void auth(Context mContext, String appKey, String redirectUrl,
                       String scope) {
         // 创建微博实例
-        mWeiboAuth = new WeiboAuth(mContext, appKey, redirectUrl, Constants.SCOPE);
+        mWeiboAuth = new AuthInfo(mContext, appKey, redirectUrl, Constants.SCOPE);
         //mWeiboAuth.anthorize(new AuthListener());
         mSsoHandler = new SsoHandler((Activity) mContext, mWeiboAuth);
         registerActivityResult();
